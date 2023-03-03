@@ -5,6 +5,16 @@ JavaScript client library to communicate with OpenAI.
 
 ![Demo](./demo.gif)
 
+### Running from GitHub
+
+```
+$ export SPIN_APP_OPENAI_KEY=<your-api-key>
+$ spin up -f spin up -f ghcr.io/radu-matei/spin-openai-demo:v1
+  api: http://127.0.0.1:3000/api (wildcard)
+  web: http://127.0.0.1:3000 (wildcard)
+  kv-explorer: http://127.0.0.1:3000/internal/kv-explorer (wildcard)
+```
+
 ### Building and running
 
 Prerequisites:
