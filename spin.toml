@@ -1,0 +1,41 @@
+spin_version = "1"
+authors = ["Radu Matei <radu.matei@fermyon.com>"]
+description = "Simple Spin application calling OpenAI APIs"
+name = "openai-demo"
+trigger = { type = "http", base = "/" }
+version = "0.1.0"
+
+[variables]
+openai_key = { required = true }
+
+# API
+[[component]]
+id = "api"
+source = "api/target/spin-http-js.wasm"
+allowed_http_hosts = ["https://api.openai.com"]
+key_value_stores = ["default"]
+[component.config]
+openai_key = "{{ openai_key }}"
+[component.trigger]
+route = "/api/..."
+[component.build]
+command = "npm run build"
+workdir = "api"
+
+# Chat UI
+[[component]]
+source = { url = "https://github.com/fermyon/spin-fileserver/releases/download/v0.0.1/spin_static_fs.wasm", digest = "sha256:650376c33a0756b1a52cad7ca670f1126391b79050df0321407da9c741d32375" }
+id = "web"
+files = [{ source = "web", destination = "/" }]
+[component.trigger]
+route = "/..."
+
+
+# Spin KV explorer component
+[[component]]
+source = { url = "https://github.com/radu-matei/spin-kv-explorer/releases/download/v0.5.0/spin-kv-explorer.wasm", digest = "sha256:d5f9e1f6b61b90f7404e3800285f7860fe2cfc7d0116023efc370adbb403fe87" }
+id = "kv-explorer"
+# add or remove stores you want to explore here
+key_value_stores = ["default"]
+[component.trigger]
+route = "/internal/kv-explorer/..."
