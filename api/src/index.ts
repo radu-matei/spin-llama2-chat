@@ -34,8 +34,10 @@ router.delete("/api/:id", async (req) => {
 
 router.post("/api/generate", async (_req, extra) => {
   try {
+    // Open the default KV store.
+    let kv = spinSdk.kv.openDefault();
     let configuration = new Configuration({
-      apiKey: spinSdk.config.get("openai_key"),
+      apiKey: decoder.decode(kv.get("openai_key")),
     });
 
     let openai = new OpenAIApi(configuration);
@@ -44,8 +46,6 @@ router.post("/api/generate", async (_req, extra) => {
     let p = JSON.parse(decoder.decode(extra.body)) as UserPrompt;
 
     console.log(`ID: ${p.id}, Message: ${p.message}`);
-    // Open the default KV store.
-    let kv = spinSdk.kv.openDefault();
 
     // Check the KV store if there is a record for the current conversation ID, otherwise, create a new conversation.
     let chat: Conversation;

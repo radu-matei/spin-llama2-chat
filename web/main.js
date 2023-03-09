@@ -14,12 +14,29 @@ function addMessageToChatHistory(speaker, message) {
 	chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
+// Function to add a new message to the chat history with typing animation
+function typeMessage(speaker, message) {
+	const msg = message.replace(/^\s+|\s+$/g, '');
+	const newMessage = document.createElement('p');
+	chatHistory.appendChild(newMessage);
+
+	let i = 0;
+	const typingAnimation = setInterval(() => {
+		newMessage.innerText = `${speaker}: ${msg.substring(0, i++)}_`;
+		if (i > msg.length) {
+			newMessage.innerText = `${speaker}: ${msg}`;
+			clearInterval(typingAnimation);
+			chatHistory.scrollTop = chatHistory.scrollHeight;
+		}
+	}, 30);
+}
+
 // Function to handle sending a message to the OpenAI API
 async function sendMessageToAPI(id, message) {
 	// TODO: Add code to send message to OpenAI API and get response
 	// The response should be passed to the addMessageToChatHistory function
 	let response = await fetch("/api/generate", { method: "POST", body: JSON.stringify({ id: id, message: message }) });
-	addMessageToChatHistory("AI", await response.text());
+	typeMessage("AI", await response.text());
 }
 
 // Event listener for send button click
