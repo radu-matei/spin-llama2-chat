@@ -1,22 +1,97 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Chat with OpenAI and Spin</title>
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <div class="chat-container">
-      <div class="chat-header">
-        <h1>Chat with OpenAI and Spin</h1>
-      </div>
-      <div class="chat-history"></div>
-      <div class="chat-input">
-        <input type="text" id="message-input" placeholder="Type your message here...">
-        <button id="send-button">Send</button>
-        <button id="clear-button">Clear</button>
-      </div>
-    </div>
-    <script src="main.js"></script>
-  </body>
-</html>
 
+<head>
+  <title>Chat with OpenAI and Spin</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+</head>
+
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h1>Chat with OpenAI and Spin</h1>
+    </div>
+    <div class="chat-history"></div>
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="Type your message here...">
+      <button id="send-button">Send</button>
+      <button id="clear-button">Clear</button>
+    </div>
+    <h3>Send messages in the chat area above, then clear all data from the server when you are done.</h3>
+    <h3>Documentation</h3>
+    <button id="toggle-docs">Toggle Documentation</button>
+  </div>
+
+  <section class="documentation" style="display: none;">
+    <h1>Persisting data across requests with Spin's key/value store</h1>
+    <p>This is a sample application for using Spin to call OpenAI APIs to integrate models such as ChatGPT in your
+      serverless application.</p>
+    <p>The backend is a Spin application written in TypeScript, which stores conversations in Spin&#39;s <a
+        href="https://www.fermyon.com/blog/spin-v09">new key/value store</a>, so state can be persisted across requests
+      and even across page visits, until a user clicks the &quot;Clear&quot; button.</p>
+    <p>Let&#39;s explore the backend of this application.</p>
+    <p>We can use the <a href="https://developer.fermyon.com/spin/javascript-components">Spin JavaScript and TypeScript
+        SDKs</a> and use the <code>Router</code> to simplify our API.</p>
+    <p>When the page loads, we use the conversation ID to load the data from the Spin key value store.
+      In this example, we can use the router to respond to the right HTTP method, and extract route parameters:</p>
+    <pre><code>router.<span class="hljs-keyword">get</span>(<span class="hljs-string">"/api/:id"</span>, <span class="hljs-keyword">async</span> (req) =&gt; {
+  <span class="hljs-keyword">let</span> id = req.<span class="hljs-keyword">params</span>.id;
+  console.log(`Getting history <span class="hljs-keyword">for</span> conversation ID ${id}`);
+  <span class="hljs-keyword">let</span> kv = spinSdk.kv.openDefault();
+  <span class="hljs-keyword">let</span> body = kv.<span class="hljs-keyword">get</span>(id);
+
+  <span class="hljs-keyword">return</span> { status: <span class="hljs-number">200</span>, body: body }
+});
+</code></pre>
+    <p>Generating a new conversation happens in a <code>POST</code> HTTP function:</p>
+    <pre><code>router.post(<span class="hljs-string">"/api/generate"</span>, <span class="hljs-keyword">async</span> (_req, extra) =&gt; {
+...
+    <span class="hljs-comment">// Open the default KV store.</span>
+    <span class="hljs-keyword">let</span> kv = spinSdk.kv.openDefault();
+
+    <span class="hljs-comment">// Check the KV store if there is a record for the current conversation ID, otherwise, create a new conversation.</span>
+    <span class="hljs-keyword">let</span> chat: Conversation;
+    <span class="hljs-keyword">if</span> (kv.exists(p.id)) {
+      chat = JSON.parse(decoder.decode(kv.<span class="hljs-keyword">get</span>(p.id)));
+    } <span class="hljs-keyword">else</span> {
+      chat = { id: p.id, prompts: [] };
+    }
+
+    <span class="hljs-keyword">let</span> prompt = generatePrompt(chat);
+
+    <span class="hljs-comment">// Send the entire conversation to OpenAI's API.</span>
+    <span class="hljs-keyword">const</span> completion = <span class="hljs-keyword">await</span> openai.createCompletion({
+      model: <span class="hljs-string">"text-davinci-003"</span>,
+      prompt: prompt,
+      max_tokens: <span class="hljs-number">350</span>,
+    });
+}
+    <span class="hljs-keyword">let</span> text = completion.data.choices[<span class="hljs-number">0</span>].text || <span class="hljs-string">"I guess the AI just gave up..."</span>;
+    chat.prompts.push({ speaker: <span class="hljs-string">'OpenAI'</span>, message: text });
+
+    <span class="hljs-comment">// Write the new state of the conversation to the KV store.</span>
+    kv.<span class="hljs-keyword">set</span>(p.id, JSON.stringify(chat));
+
+    <span class="hljs-comment">// Return the latest response to the user.</span>
+    <span class="hljs-keyword">return</span> { status: <span class="hljs-number">200</span>, body: encoder.encode(text).buffer };
+...
+</code></pre>
+
+    <p>To learn more, check out <a href="https://github.com/radu-matei/spin-openai-demo">the GitHub repository</a>.</p>
+
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/radu-matei/spin-openai-demo">
+        <i class="icon-github"></i>
+      </a>
+      <a href="https://www.fermyon.com/spin/">Built with Fermyon Spin</a>
+    </div>
+  </footer>
+  <script src="main.js"></script>
+</body>
+
+</html>

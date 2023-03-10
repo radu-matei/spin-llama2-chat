@@ -3,7 +3,38 @@ const messageInput = document.getElementById('message-input');
 const sendButton = document.getElementById('send-button');
 const clearButton = document.getElementById('clear-button');
 
-const id = uuidv4();
+const conversationIdKey = "conversationId";
+
+let conversationId = getOrSetConversationId();
+
+(async () => {
+	let history = await fetch(`/api/${conversationId}`);
+	console.log(`Asking about conversation ID: ${conversationId}`);
+	if (history.ok) {
+		let chat = await history.json();
+		if (chat) {
+			chat.prompts.forEach(c => {
+				addMessageToChatHistory(c.speaker, c.message);
+			})
+			notify("Loaded conversation from history.");
+		}
+	} else {
+		notify("Created new conversation.");
+	}
+})();
+
+
+function getOrSetConversationId() {
+	let conversationId;
+	if (window.localStorage.getItem(conversationIdKey)) {
+		conversationId = window.localStorage.getItem(conversationIdKey);
+	} else {
+		conversationId = uuidv4();
+		console.log(`Conversation ID: ${conversationId}`);
+		window.localStorage.setItem(conversationIdKey, conversationId);
+	}
+	return conversationId;
+}
 
 // Function to add a new message to the chat history
 function addMessageToChatHistory(speaker, message) {
@@ -33,8 +64,6 @@ function typeMessage(speaker, message) {
 
 // Function to handle sending a message to the OpenAI API
 async function sendMessageToAPI(id, message) {
-	// TODO: Add code to send message to OpenAI API and get response
-	// The response should be passed to the addMessageToChatHistory function
 	let response = await fetch("/api/generate", { method: "POST", body: JSON.stringify({ id: id, message: message }) });
 	typeMessage("AI", await response.text());
 }
@@ -42,11 +71,10 @@ async function sendMessageToAPI(id, message) {
 // Event listener for send button click
 sendButton.addEventListener('click', () => {
 	const message = messageInput.value.trim();
-
 	if (message) {
 		addMessageToChatHistory('user', message);
 		messageInput.value = '';
-		sendMessageToAPI(id, message);
+		sendMessageToAPI(conversationId, message);
 	}
 });
 
@@ -58,14 +86,17 @@ messageInput.addEventListener('keydown', (event) => {
 		if (message) {
 			addMessageToChatHistory('user', message);
 			messageInput.value = '';
-			sendMessageToAPI(id, message);
+			sendMessageToAPI(conversationId, message);
 		}
 	}
 });
 
 clearButton.addEventListener('click', async () => {
+	window.localStorage.removeItem(conversationIdKey);
+	conversationId = getOrSetConversationId();
+	notify("Clearing history and starting new conversation.");
 	chatHistory.innerHTML = '';
-	await fetch(`/api/${id}`, { method: "DELETE" });
+	await fetch(`/api/${conversationId}`, { method: "DELETE" });
 });
 
 function uuidv4() {
@@ -74,3 +105,28 @@ function uuidv4() {
 	);
 }
 
+function notify(message) {
+	const notification = document.createElement('div');
+	notification.classList.add('notification');
+	notification.textContent = message;
+
+	// Add the notification to the body
+	document.body.appendChild(notification);
+
+	// Set a timeout to remove the notification after 3 seconds
+	setTimeout(() => {
+		notification.classList.add('hide');
+	}, 3000);
+}
+
+
+const toggleDocsButton = document.getElementById('toggle-docs');
+const docsSection = document.querySelector('.documentation');
+
+toggleDocsButton.addEventListener('click', function () {
+	if (docsSection.style.display === "none") {
+		docsSection.style.display = "block";
+	} else {
+		docsSection.style.display = "none";
+	}
+});

@@ -20,6 +20,21 @@ interface UserPrompt {
   message: string
 }
 
+// Return a conversation based on its ID.
+router.get("/api/:id", async (req) => {
+  let id = req.params.id;
+  console.log(`Getting history for conversation ID ${id}`);
+  try {
+    let kv = spinSdk.kv.openDefault();
+    let body = kv.get(id);
+
+    return { status: 200, body: body }
+  } catch (err) {
+    console.log(err);
+    return error()
+  }
+});
+
 router.delete("/api/:id", async (req) => {
   let id = req.params.id;
   console.log(`Deleting history for conversation ID ${id}`);
@@ -28,7 +43,7 @@ router.delete("/api/:id", async (req) => {
     kv.delete(id);
     return { status: 200 }
   } catch (err) {
-    return { status: 500 }
+    return error()
   }
 });
 
@@ -75,18 +90,13 @@ router.post("/api/generate", async (_req, extra) => {
 
     // Return the latest response to the user.
     return { status: 200, body: encoder.encode(text).buffer };
-
   } catch (err) {
     console.log(err);
-    return { status: 500, body: encoder.encode("You might want to ask ChatGPT to fix this...").buffer }
+    return error()
   }
 });
 
-export async function handleRequest(req: HttpRequest): Promise<HttpResponse> {
-  return await router.handleRequest(req, { body: req.body });
-}
-
-// Function to generate the prompt based on the conversation history
+// Function to generate the prompt based on the conversation history.
 function generatePrompt(chat: Conversation): string {
   let prompt = '';
 
@@ -99,3 +109,12 @@ function generatePrompt(chat: Conversation): string {
   return prompt;
 }
 
+// Function to generate a generic error message.
+function error(): HttpResponse {
+  return { status: 500, body: encoder.encode("You might want to ask ChatGPT to fix this...").buffer }
+}
+
+// The entrypoint to the Spin application.
+export async function handleRequest(req: HttpRequest): Promise<HttpResponse> {
+  return await router.handleRequest(req, { body: req.body });
+}

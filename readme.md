@@ -8,12 +8,13 @@ JavaScript client library to communicate with OpenAI.
 ### Running from GitHub
 
 ```
-$ export SPIN_APP_OPENAI_KEY=<your-api-key>
 $ spin up -f spin up -f ghcr.io/radu-matei/spin-openai-demo:v1
   api: http://127.0.0.1:3000/api (wildcard)
   web: http://127.0.0.1:3000 (wildcard)
   kv-explorer: http://127.0.0.1:3000/internal/kv-explorer (wildcard)
 ```
+
+Once the application started, you can open the KV explorer and add your OpenAI API key using the `openai_key` key.
 
 ### Building and running
 
@@ -34,7 +35,6 @@ $ cd api && npm install
 Now, you can build the application and run it locally with Spin:
 
 ```bash
-$ export SPIN_APP_OPENAI_KEY=<your-api-key>
 $ spin build
 $ spin up
 Serving http://127.0.0.1:3000
