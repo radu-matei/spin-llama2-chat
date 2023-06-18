@@ -52,7 +52,7 @@ router.post("/api/generate", async (_req, extra) => {
     // Open the default KV store.
     let kv = spinSdk.kv.openDefault();
     let configuration = new Configuration({
-      apiKey: decoder.decode(kv.get("openai_key")),
+      apiKey: spinSdk.config.get("openai_key")
     });
 
     let openai = new OpenAIApi(configuration);

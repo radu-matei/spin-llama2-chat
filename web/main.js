@@ -65,7 +65,7 @@ function typeMessage(speaker, message) {
 // Function to handle sending a message to the OpenAI API
 async function sendMessageToAPI(id, message) {
 	let response = await fetch("/api/generate", { method: "POST", body: JSON.stringify({ id: id, message: message }) });
-	typeMessage("AI", await response.text());
+	typeMessage("OpenAI", await response.text());
 }
 
 // Event listener for send button click
@@ -123,7 +123,7 @@ function notify(message) {
 const toggleDocsButton = document.getElementById('toggle-docs');
 const docsSection = document.querySelector('.documentation');
 
-toggleDocsButton.addEventListener('click', function () {
+toggleDocsButton.addEventListener('click', function() {
 	if (docsSection.style.display === "none") {
 		docsSection.style.display = "block";
 	} else {
