@@ -8,13 +8,13 @@ JavaScript client library to communicate with OpenAI.
 ### Running from GitHub
 
 ```
-$ spin up -f spin up -f ghcr.io/radu-matei/spin-openai-demo:v1
+# export your OpenAI key as an environment variable when running locally.
+$  export SPIN_CONFIG_OPENAI_KEY=sk-*******
+$ spin up -f spin up -f ghcr.io/radu-matei/spin-chatgpt:v1
   api: http://127.0.0.1:3000/api (wildcard)
   web: http://127.0.0.1:3000 (wildcard)
   kv-explorer: http://127.0.0.1:3000/internal/kv-explorer (wildcard)
 ```
-
-Once the application started, you can open the KV explorer and add your OpenAI API key using the `openai_key` key.
 
 ### Building and running
 
@@ -36,6 +36,8 @@ Now, you can build the application and run it locally with Spin:
 
 ```bash
 $ spin build
+# export your OpenAI key as an environment variable when running locally.
+$  export SPIN_CONFIG_OPENAI_KEY=sk-*******
 $ spin up
 Serving http://127.0.0.1:3000
 Available Routes:
@@ -46,3 +48,16 @@ Available Routes:
 
 The OpenAI client is based on the [work done by Eric Lewis](https://github.com/ericlewis/openai-node),
 modified to use the `fetch` API.
+
+### Deploying to Fermyon Cloud
+
+```bash
+$ spin deploy --variable openai_key=$SPIN_CONFIG_OPENAI_KEY
+Uploading chatgpt version 0.1.0+r43dbc47c...
+Deploying...
+Waiting for application to become ready..... ready
+Available Routes:
+  web: https://spin-chatgpt.fermyon.app (wildcard)
+  api: https://spin-chatgpt.fermyon.app/api (wildcard)
+  kv-explorer: https://spin-chatgpt.fermyon.app/internal/kv-explorer (wildcard)
+```
