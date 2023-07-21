@@ -18,7 +18,7 @@ body {
 
 .chat-container {
   max-width: 1000px;
-  flex-grow: 1;
+  flex-grow: 10;
   margin: 0 auto;
 }
 
@@ -28,7 +28,8 @@ body {
 }
 
 .chat-history {
-  height: 350px;
+  height: 70vh;
+  min-height: max-content;
   overflow-y: scroll;
   border: 1px solid var(--battleship-gray);
   padding: 10px;
@@ -199,3 +200,18 @@ footer {
 .footer-links a:hover {
   text-decoration: underline;
 }
+
+.user-chat-message {
+  background-color: var(--periwinkle);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+  color: white;
+}
+
+.assistant-chat-message {
+  background-color: var(--battleship-gray);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+  color: white;

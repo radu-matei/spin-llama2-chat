@@ -1,9 +1,7 @@
-import { HttpRequest, HttpResponse } from "@fermyon/spin-sdk"
-import { Configuration, OpenAIApi } from "@ericlewis/openai";
+import { HttpRequest, HttpResponse, Router, Kv, Llm } from "spin-sdk"
 
 let decoder = new TextDecoder();
-let encoder = new TextEncoder();
-let router = utils.Router();
+let router = Router();
 
 interface Prompt {
   speaker: string,
@@ -25,7 +23,7 @@ router.get("/api/:id", async (req) => {
   let id = req.params.id;
   console.log(`Getting history for conversation ID ${id}`);
   try {
-    let kv = spinSdk.kv.openDefault();
+    let kv = Kv.openDefault();
     let body = kv.get(id);
 
     return { status: 200, body: body }
@@ -39,7 +37,7 @@ router.delete("/api/:id", async (req) => {
   let id = req.params.id;
   console.log(`Deleting history for conversation ID ${id}`);
   try {
-    let kv = spinSdk.kv.openDefault();
+    let kv = Kv.openDefault();
     kv.delete(id);
     return { status: 200 }
   } catch (err) {
@@ -50,12 +48,7 @@ router.delete("/api/:id", async (req) => {
 router.post("/api/generate", async (_req, extra) => {
   try {
     // Open the default KV store.
-    let kv = spinSdk.kv.openDefault();
-    let configuration = new Configuration({
-      apiKey: spinSdk.config.get("openai_key")
-    });
-
-    let openai = new OpenAIApi(configuration);
+    let kv = Kv.openDefault();
 
     // Read the conversation ID and message from the request body.
     let p = JSON.parse(decoder.decode(extra.body)) as UserPrompt;
@@ -71,27 +64,21 @@ router.post("/api/generate", async (_req, extra) => {
     }
 
     // Add the new message to the prompts.
-    chat.prompts.push({ speaker: 'user', message: p.message });
-
+    chat.prompts.push({ speaker: 'User', message: p.message });
     let prompt = generatePrompt(chat);
 
-    // Send the entire conversation to OpenAI's API.
-    const completion = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: prompt,
-      max_tokens: 350,
-    });
+    let completion = Llm.runWithDefaults(prompt);
 
-    let text = completion.data.choices[0].text || "I guess the AI just gave up...";
-    chat.prompts.push({ speaker: 'OpenAI', message: text });
+    let text = completion || "I guess the AI just gave up...";
+    chat.prompts.push({ speaker: 'Assistant', message: text });
 
     // Write the new state of the conversation to the KV store.
     kv.set(p.id, JSON.stringify(chat));
 
     // Return the latest response to the user.
-    return { status: 200, body: encoder.encode(text).buffer };
+    return { status: 200, body: text };
   } catch (err) {
-    console.log(err);
+    console.log("Error generating inference: " + err);
     return error()
   }
 });
@@ -99,19 +86,20 @@ router.post("/api/generate", async (_req, extra) => {
 // Function to generate the prompt based on the conversation history.
 function generatePrompt(chat: Conversation): string {
   let prompt = '';
+  prompt += `System: You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information. You are a chat application. NEVER continue a prompt by generating a User question.\n`;
 
   for (let i = 0; i < chat.prompts.length; i++) {
     prompt += `${chat.prompts[i].speaker}: ${chat.prompts[i].message}\n`;
   }
 
-  prompt += 'AI: ';
+  prompt += 'Assistant: ';
 
   return prompt;
 }
 
 // Function to generate a generic error message.
 function error(): HttpResponse {
-  return { status: 500, body: encoder.encode("You might want to ask ChatGPT to fix this...").buffer }
+  return { status: 500, body: "You might want to ask ChatGPT to fix this..." }
 }
 
 // The entrypoint to the Spin application.

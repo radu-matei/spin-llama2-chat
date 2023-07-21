@@ -39,7 +39,12 @@ function getOrSetConversationId() {
 // Function to add a new message to the chat history
 function addMessageToChatHistory(speaker, message) {
 	const msg = message.replace(/^\s+|\s+$/g, '');
-	const newMessage = document.createElement('p');
+	const newMessage = document.createElement('div');
+	if (speaker == "User") {
+		newMessage.className = "user-chat-message";
+	} else {
+		newMessage.className = "assistant-chat-message";
+	}
 	newMessage.innerText = `${speaker}: ${msg}`;
 	chatHistory.appendChild(newMessage);
 	chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -48,7 +53,12 @@ function addMessageToChatHistory(speaker, message) {
 // Function to add a new message to the chat history with typing animation
 function typeMessage(speaker, message) {
 	const msg = message.replace(/^\s+|\s+$/g, '');
-	const newMessage = document.createElement('p');
+	const newMessage = document.createElement('div');
+	if (speaker == "User") {
+		newMessage.className = "user-chat-message";
+	} else {
+		newMessage.className = "assistant-chat-message";
+	}
 	chatHistory.appendChild(newMessage);
 
 	let i = 0;
@@ -62,17 +72,17 @@ function typeMessage(speaker, message) {
 	}, 30);
 }
 
-// Function to handle sending a message to the OpenAI API
+// Function to handle sending a message to the generation API
 async function sendMessageToAPI(id, message) {
 	let response = await fetch("/api/generate", { method: "POST", body: JSON.stringify({ id: id, message: message }) });
-	typeMessage("OpenAI", await response.text());
+	typeMessage("Assistant", await response.text());
 }
 
 // Event listener for send button click
 sendButton.addEventListener('click', () => {
 	const message = messageInput.value.trim();
 	if (message) {
-		addMessageToChatHistory('user', message);
+		addMessageToChatHistory('User', message);
 		messageInput.value = '';
 		sendMessageToAPI(conversationId, message);
 	}
@@ -84,7 +94,7 @@ messageInput.addEventListener('keydown', (event) => {
 		const message = messageInput.value.trim();
 
 		if (message) {
-			addMessageToChatHistory('user', message);
+			addMessageToChatHistory('User', message);
 			messageInput.value = '';
 			sendMessageToAPI(conversationId, message);
 		}
