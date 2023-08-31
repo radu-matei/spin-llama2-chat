@@ -1,4 +1,4 @@
-import { HttpRequest, HttpResponse, Router, Kv, Llm } from "spin-sdk"
+import { HttpRequest, HttpResponse, Router, Kv, Llm, InferencingModels } from "spin-sdk"
 
 let decoder = new TextDecoder();
 let router = Router();
@@ -67,9 +67,10 @@ router.post("/api/generate", async (_req, extra) => {
     chat.prompts.push({ speaker: 'User', message: p.message });
     let prompt = generatePrompt(chat);
 
-    let completion = Llm.runWithDefaults(prompt);
+    let completion = Llm.infer(InferencingModels.Llama2Chat, prompt, { max_tokens: 100 });
+    console.log(completion);
 
-    let text = completion || "I guess the AI just gave up...";
+    let text = completion.text || "I guess the AI just gave up...";
     chat.prompts.push({ speaker: 'Assistant', message: text });
 
     // Write the new state of the conversation to the KV store.
@@ -86,7 +87,7 @@ router.post("/api/generate", async (_req, extra) => {
 // Function to generate the prompt based on the conversation history.
 function generatePrompt(chat: Conversation): string {
   let prompt = '';
-  prompt += `System: You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information. You are a chat application. NEVER continue a prompt by generating a User question.\n`;
+  // prompt += `System: You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature. If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information. You are a chat application. NEVER continue a prompt by generating a User question.\n`;
 
   for (let i = 0; i < chat.prompts.length; i++) {
     prompt += `${chat.prompts[i].speaker}: ${chat.prompts[i].message}\n`;
