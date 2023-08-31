@@ -1,6 +1,6 @@
 spin_version = "1"
 authors = ["Radu Matei <radu.matei@fermyon.com>"]
-name = "spin-llm-dmeos"
+name = "spin-llama2-chat"
 trigger = { type = "http", base = "/" }
 version = "0.1.0"
 
@@ -25,11 +25,3 @@ command = "npm run build"
 workdir = "api"
 watch = ["src/index.ts", "package.json"]
 
-# Spin KV explorer component
-[[component]]
-source = { url = "https://github.com/radu-matei/spin-kv-explorer/releases/download/v0.9.0/spin-kv-explorer.wasm", digest = "sha256:07f5f0b8514c14ae5830af0f21674fd28befee33cd7ca58bc0a68103829f2f9c" }
-id = "kv-explorer"
-# add or remove stores you want to explore here
-key_value_stores = ["default"]
-[component.trigger]
-route = "/internal/kv-explorer/..."

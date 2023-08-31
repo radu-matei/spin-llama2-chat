@@ -14,7 +14,7 @@ let conversationId = getOrSetConversationId();
 		let chat = await history.json();
 		if (chat) {
 			chat.prompts.forEach(c => {
-				addMessageToChatHistory(c.speaker, c.message);
+				addMessageToChatHistory(c.role, c.content);
 			})
 			notify("Loaded conversation from history.");
 		}
@@ -37,24 +37,27 @@ function getOrSetConversationId() {
 }
 
 // Function to add a new message to the chat history
-function addMessageToChatHistory(speaker, message) {
-	const msg = message.replace(/^\s+|\s+$/g, '');
+function addMessageToChatHistory(role, content) {
+	if (role == "System") {
+		return;
+	}
+	const msg = content.replace(/^\s+|\s+$/g, '');
 	const newMessage = document.createElement('div');
-	if (speaker == "User") {
+	if (role == "User") {
 		newMessage.className = "user-chat-message";
 	} else {
 		newMessage.className = "assistant-chat-message";
 	}
-	newMessage.innerText = `${speaker}: ${msg}`;
+	newMessage.innerText = `${role}: ${msg}`;
 	chatHistory.appendChild(newMessage);
 	chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
 // Function to add a new message to the chat history with typing animation
-function typeMessage(speaker, message) {
-	const msg = message.replace(/^\s+|\s+$/g, '');
+function typeMessage(role, content) {
+	const msg = content.replace(/^\s+|\s+$/g, '');
 	const newMessage = document.createElement('div');
-	if (speaker == "User") {
+	if (role == "User") {
 		newMessage.className = "user-chat-message";
 	} else {
 		newMessage.className = "assistant-chat-message";
@@ -63,9 +66,9 @@ function typeMessage(speaker, message) {
 
 	let i = 0;
 	const typingAnimation = setInterval(() => {
-		newMessage.innerText = `${speaker}: ${msg.substring(0, i++)}_`;
+		newMessage.innerText = `${role}: ${msg.substring(0, i++)}_`;
 		if (i > msg.length) {
-			newMessage.innerText = `${speaker}: ${msg}`;
+			newMessage.innerText = `${role}: ${msg}`;
 			clearInterval(typingAnimation);
 			chatHistory.scrollTop = chatHistory.scrollHeight;
 		}
@@ -73,8 +76,8 @@ function typeMessage(speaker, message) {
 }
 
 // Function to handle sending a message to the generation API
-async function sendMessageToAPI(id, message) {
-	let response = await fetch("/api/generate", { method: "POST", body: JSON.stringify({ id: id, message: message }) });
+async function sendMessageToAPI(id, content) {
+	let response = await fetch("/api/generate", { method: "POST", body: JSON.stringify({ id: id, content: content }) });
 	typeMessage("Assistant", await response.text());
 }
 
